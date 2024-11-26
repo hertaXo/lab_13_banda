@@ -1,5 +1,9 @@
-// 000RDB000 Jānis Programmētājs
-// 111RDB111 Ilze Programmētāja
+// Elizabete Smirnova 241RDB250
+// Estere Gristiņa 241RDB206
+// Liāna Usāne 241RDB227
+// Anete Kupča 241RDB180
+// Herta Matisone 241RDB177
+
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -111,9 +115,11 @@ public class Main {
 	}
 	
 	public static void about() {
-		// TODO insert information about authors
-		System.out.println("000RDB000 Jānis Programmētājs");
-		System.out.println("111RDB111 Ilze Programmētāja");
+		System.out.println("Elizabete Smirnova 241RDB250");
+		System.out.println("Estere Gristiņa 241RDB206");
+		System.out.println("Liāna Usāne 241RDB227");
+		System.out.println("Anete Kupča 241RDB180");
+		System.out.println("Herta Matisone 241RDB177");
 	}
 }
 
