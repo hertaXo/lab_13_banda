@@ -61,7 +61,27 @@ public class Main {
 	}
 
 	public static void comp(String sourceFile, String resultFile) {
-		// TODO: implement this method
+		// LZ77---------------------------------------------------------------
+
+
+		// lasa failu
+
+        // izveido output failu
+
+        // ar for un if-iem meklē mach
+        // lz 77!!!!!
+
+        private void trimSearchBuffer() {
+            // Limit search buffer size to 4096 characters
+        }
+
+        public static void main() /*string arg*/  {
+            // if viss ok
+            // izprintē ka viss ok
+
+            // try, error
+        }
+		//LZ77 the end ------------------------------------------------------------
 	}
 
 	public static void decomp(String sourceFile, String resultFile) {
