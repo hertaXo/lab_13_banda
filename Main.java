@@ -7,11 +7,15 @@
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Scanner;
+import java.util.*;
+// neaizmirstam pievienot konkrētās bibliotēkas, ko izmantojāt. Pagaidām pievienoju visas
+//import java.util.PriorityQueue;
+//import java.util.HashMap;
+//import java.util.Map;
+//Anete: šitos nedzēst ples man vajadzēs Huffman algoritmam ()
 
 
 public class Main {
-
 
 	public static void main(String[] args) {
 		Scanner sc = new Scanner(System.in);
@@ -63,29 +67,65 @@ public class Main {
 	public static void comp(String sourceFile, String resultFile) {
 		// LZ77---------------------------------------------------------------
 
-
 		// lasa failu
 
-        // izveido output failu
+        	// izveido output failu
 
-        // ar for un if-iem meklē mach
-        // lz 77!!!!!
+        	// ar for un if-iem meklē mach
+        	// lz 77!!!!!
+		
+		//Huffmanis -----------------------------------------------------------
 
-        private void trimSearchBuffer() {
-            // Limit search buffer size to 4096 characters
-        }
+		class HuffmanNode {
+            		char character;   
+            		int frequency;    
+            		HuffmanNode left; 
+            		HuffmanNode right; 
 
-        public static void main() /*string arg*/  {
-            // if viss ok
-            // izprintē ka viss ok
+			public HuffmanNode(char character, int frequency) {
+                		this.character = character;
+                		this.frequency = frequency;
+                		this.left = null;  
+                		this.right = null; 
+			}
 
-            // try, error
-        }
+			public static int compare(HuffmanNode x, HuffmanNode y) {
+                		return x.frequency - y.frequency; 
+            		}
+            	}
+
+		//jānolasa jaunais LZ77 fails 
+		//for cikls lai izveidotu vārdnīcu ar simboliem un to biežumiem
+		
+		//izveidot ArrayList, kur ieliek vārdnīcas vērtības, sakārto tās
+		//izveidot un aizpildīt Huffman Node sarakstu
+		
+		//jāizveido pats koks ar while ciklu, pāri palikusī lielākā biežuma vērtība būs sakne
+		//jāizveido vārdnīca ar simbols : Huffmaņa vērtību, jāizsauc Huffman codes metode
+		//jāsaraksta tas viss failā - for cikliņš
+
+		//Huffmanis beigas ----------------------------------------------------------
+		
+
+        	private void trimSearchBuffer() {
+            		// Limit search buffer size to 4096 characters
+        	}
+
+        	public static void main() /*string arg*/  {
+            		// if viss ok
+            		// izprintē ka viss ok
+
+            		// try, error
+        	}//Anete: uhmmm mums jau ir main funkcija augšā tho??
+
+		
 		//LZ77 the end ------------------------------------------------------------
 	}
 
 	public static void decomp(String sourceFile, String resultFile) {
-		// TODO: implement this method
+		// Indentācija guys :,((
+
+		
 		//LZ77(Liāna)---------------------------------------------------------------
 		//(Man aptuveni ir ideja kā tas viss varētu strādāt bet vēl viss ir procesā,
 		//sorry ka neko gnj nevar saprast manos komentāros.)
@@ -109,7 +149,7 @@ public class Main {
 // Funkcija, kas lasa saspiestos faila datus un tos dekomprimē
     private static String decompress(List<Triple> compressed) {
         StringBuilder decompressed = new StringBuilder();
-		// for  Ja distance un length ir 0, pievieno nextChar
+	    // for  Ja distance un length ir 0, pievieno nextChar
 	    //if, else
 	    //Aprēķina sākuma indeksu
 	    // Pievieno atkārtotus simbolus ar for
@@ -181,6 +221,11 @@ public class Main {
 		System.out.println("Liāna Usāne 241RDB227");
 		System.out.println("Anete Kupča 241RDB180");
 		System.out.println("Herta Matisone 241RDB177");
+	}
+
+	//huffmaņa koda ģenerators katrai vērtībai
+	public static void HuffmanCodes(){
+		//izmantos huffmaņa koku un ies lejā nolasot kodiņu
 	}
 }
 
