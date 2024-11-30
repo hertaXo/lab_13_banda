@@ -86,16 +86,57 @@ public class Main {
 
 	public static void decomp(String sourceFile, String resultFile) {
 		// TODO: implement this method
+		//LZ77(Liāna)---------------------------------------------------------------
+		//(Man aptuveni ir ideja kā tas viss varētu strādāt bet vēl viss ir procesā,
+		//sorry ka neko gnj nevar saprast manos komentāros.)
+		// Lasa saspiestu failu
+		// Izveido atjaunoto (dekompresēto) failu
+		// Izmanto Triple objektu sarakstu
+		// Triple klase (distance, garums, nextChar)
+    	static class Triple {
+        	int distance;
+       		int garums;
+        	char nextChar;
+    }
+	public static Triple fromString(String line) {
+            String[] parts = line.split(",");
+            return new Triple(
+                Integer.parseInt(parts[0]), 
+                Integer.parseInt(parts[1]), 
+                parts[2].charAt(0)
+            );
+        }
+// Funkcija, kas lasa saspiestos faila datus un tos dekomprimē
+    private static String decompress(List<Triple> compressed) {
+        StringBuilder decompressed = new StringBuilder();
+		// for  Ja distance un length ir 0, pievieno nextChar
+	    //if, else
+	    //Aprēķina sākuma indeksu
+	    // Pievieno atkārtotus simbolus ar for
+
+	    // LZ77 dekompresijas galvenā funkcija
+	    public static void decompressFile(String inputFilePath, String outputFilePath) {
+        try {
+            // Lasa saspiesto failu
+           
+            }
+	catch (IOException e) {
+		
+	    }
+		// Dekomprimē datus ar for un if
 	}
+		
 	
 	public static void size(String sourceFile) {
+		System.out.print("file name: ");
+   		String sourceFile = scanner.nextLine();
 		try {
 			FileInputStream f = new FileInputStream(sourceFile);
-			System.out.println("size: " + f.available());
+			System.out.println("size: " + f.available()+ " bytes");
 			f.close();
 		}
 		catch (IOException ex) {
-			System.out.println(ex.getMessage());
+			System.out.println("Error: " + ex.getMessage());
 		}
 		
 	}
