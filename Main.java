@@ -67,8 +67,45 @@ public class Main {
 	public static void comp(String sourceFile, String resultFile) {
 		// LZ77---------------------------------------------------------------
 
-		// lasa failu
+		// lasa failu(Elizabete)
+		public class FileExistsChecker {
 
+			public static void main(String[] args) {
+				Scanner sc = new Scanner(System.in); // Izveido Scanner objektu lietotāja ievades nolasīšanai
+				
+				System.out.print("Ievadiet faila ceļu (piemēram, test.html): "); // Lūdz ievadīt faila ceļu
+				String sourceFile = sc.nextLine(); // Nolasām faila ceļu no lietotāja
+		
+				checkIfFileExistsAndRead(sourceFile); // Izsauc metodi, kas pārbauda faila esamību un lasa tā saturu
+				sc.close(); // Aizver Scanner objektu pēc lietošanas
+			}
+		
+			public static void checkIfFileExistsAndRead(String sourceFile) {
+				File file = new File(sourceFile); // Izveido File objektu ar ievadīto ceļu
+				if (file.exists() && file.isFile()) { // Pārbauda, vai fails eksistē un ir fails
+					System.out.println("Fails atrasts: " + sourceFile);
+					readFileContent(sourceFile); // Ja fails pastāv, nolasām tā saturu
+				} else {
+					System.out.println("Fails nav atrasts: " + sourceFile); // Funkcija ja fails neeksistē
+				}
+			}
+		
+			// Metode faila satura nolasīšanai un izdrukāšanai
+			public static void readFileContent(String sourceFile) {
+				try (FileInputStream fis = new FileInputStream(sourceFile)) {
+					int ch;
+					StringBuilder content = new StringBuilder(); // Lai saglabātu faila saturu
+					while ((ch = fis.read()) != -1) { // Lasa failu pa vienam burtam
+						content.append((char) ch); // Pievieno katru nolasīto simbolu saturam
+					}
+					System.out.println("Faila saturs:");
+					System.out.println(content.toString()); // Izvada faila saturu
+				} catch (IOException e) {
+					System.err.println("Kļūda faila apstrādē: " + e.getMessage());
+				}
+			}
+		}
+		
         	// izveido output failu
 
         	// ar for un if-iem meklē mach
@@ -92,7 +129,8 @@ public class Main {
 			public static int compare(HuffmanNode x, HuffmanNode y) {
                 		return x.frequency - y.frequency; 
             		}
-            	}
+				}
+            }
 
 		//jānolasa jaunais LZ77 fails 
 		//for cikls lai izveidotu vārdnīcu ar simboliem un to biežumiem
