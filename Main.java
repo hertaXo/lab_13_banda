@@ -66,50 +66,113 @@ public class Main {
 
 	public static void comp(String sourceFile, String resultFile) {
 		// LZ77---------------------------------------------------------------
-
+		//set max for buffer(herta)
+		private static final int SEARCH_BUFFER_SIZE = 4096; // Maximum size of the search buffer
+		private static final int LOOKAHEAD_BUFFER_SIZE = 15; // Maximum size of the lookahead buffer
 		// lasa failu(Elizabete)
-		public class FileExistsChecker {
 
-			public static void main(String[] args) {
-				Scanner sc = new Scanner(System.in); // Izveido Scanner objektu lietotāja ievades nolasīšanai
-				
-				System.out.print("Ievadiet faila ceļu (piemēram, test.html): "); // Lūdz ievadīt faila ceļu
-				String sourceFile = sc.nextLine(); // Nolasām faila ceļu no lietotāja
-		
-				checkIfFileExistsAndRead(sourceFile); // Izsauc metodi, kas pārbauda faila esamību un lasa tā saturu
-				sc.close(); // Aizver Scanner objektu pēc lietošanas
-			}
-		
-			public static void checkIfFileExistsAndRead(String sourceFile) {
-				File file = new File(sourceFile); // Izveido File objektu ar ievadīto ceļu
-				if (file.exists() && file.isFile()) { // Pārbauda, vai fails eksistē un ir fails
-					System.out.println("Fails atrasts: " + sourceFile);
-					readFileContent(sourceFile); // Ja fails pastāv, nolasām tā saturu
-				} else {
-					System.out.println("Fails nav atrasts: " + sourceFile); // Funkcija ja fails neeksistē
-				}
-			}
-		
-			// Metode faila satura nolasīšanai un izdrukāšanai
-			public static void readFileContent(String sourceFile) {
-				try (FileInputStream fis = new FileInputStream(sourceFile)) {
-					int ch;
-					StringBuilder content = new StringBuilder(); // Lai saglabātu faila saturu
-					while ((ch = fis.read()) != -1) { // Lasa failu pa vienam burtam
-						content.append((char) ch); // Pievieno katru nolasīto simbolu saturam
-					}
-					System.out.println("Faila saturs:");
-					System.out.println(content.toString()); // Izvada faila saturu
-				} catch (IOException e) {
-					System.err.println("Kļūda faila apstrādē: " + e.getMessage());
-				}
+		public static void man(String[] args) {
+			Scanner sc = new Scanner(System.in); // Izveido Scanner objektu lietotāja ievades nolasīšanai
+			
+			System.out.print("Ievadiet faila ceļu (piemēram, test.html): "); // Lūdz ievadīt faila ceļu
+			String sourceFile = sc.nextLine(); // Nolasām faila ceļu no lietotāja
+	
+			checkIfFileExistsAndRead(sourceFile); // Izsauc metodi, kas pārbauda faila esamību un lasa tā saturu
+			sc.close(); // Aizver Scanner objektu pēc lietošanas
+		}
+	
+		public static void checkIfFileExistsAndRead(String sourceFile) {
+			File file = new File(sourceFile); // Izveido File objektu ar ievadīto ceļu
+			if (file.exists() && file.isFile()) { // Pārbauda, vai fails eksistē un ir fails
+				System.out.println("Fails atrasts: " + sourceFile);
+				readFileContent(sourceFile); // Ja fails pastāv, nolasām tā saturu
+			} else {
+				System.out.println("Fails nav atrasts: " + sourceFile); // Funkcija ja fails neeksistē
 			}
 		}
-		
-        	// izveido output failu
+	
+		// Metode faila satura nolasīšanai un izdrukāšanai
+		public static void readFileContent(String sourceFile) {
+			try (FileInputStream fis = new FileInputStream(sourceFile)) {
+				int ch;
+				StringBuilder content = new StringBuilder(); // Lai saglabātu faila saturu
+				while ((ch = fis.read()) != -1) { // Lasa failu pa vienam burtam
+					content.append((char) ch); // Pievieno katru nolasīto simbolu saturam
+				}
+				System.out.println("Faila saturs:");
+				System.out.println(content.toString()); // Izvada faila saturu
+			} catch (IOException e) {
+				System.err.println("Kļūda faila apstrādē: " + e.getMessage());
+			}
+		}
 
-        	// ar for un if-iem meklē mach
-        	// lz 77!!!!!
+		// Method to compress a file using LZ77 (herta)
+		public static void compressFile(String sourceFile) {
+			File file = new File(sourceFile);
+	
+			if (!file.exists() || !file.isFile()) {
+				System.out.println("Fails nav atrasts: " + sourceFile);
+				return;
+			}
+	
+			String compressedFilePath = sourceFile + ".lz77";
+	
+			try (FileInputStream fis = new FileInputStream(sourceFile);
+					FileOutputStream fos = new FileOutputStream(compressedFilePath)) {
+	
+				System.out.println("Saspiest failu: " + sourceFile);
+				StringBuilder searchBuffer = new StringBuilder();
+	
+				int nextChar;
+				while ((nextChar = fis.read()) != -1) {
+					// Initialize lookahead buffer
+					StringBuilder lookaheadBuffer = new StringBuilder();
+					lookaheadBuffer.append((char) nextChar);
+	
+					int matchPosition = -1;
+					int matchLength = 0;
+	
+					// Find the longest match in the search buffer
+					for (int length = 1; length <= LOOKAHEAD_BUFFER_SIZE && nextChar != -1; length++) {
+						String lookahead = lookaheadBuffer.toString();
+						int tempPosition = searchBuffer.indexOf(lookahead);
+	
+						if (tempPosition != -1) {
+							matchPosition = tempPosition;
+							matchLength = lookahead.length();
+						} else {
+							break; // No further match
+						}
+	
+						nextChar = fis.read();
+						if (nextChar != -1) {
+							lookaheadBuffer.append((char) nextChar);
+						}
+					}
+	
+					// Decide whether to encode as match or literal
+					String encodedMatch = "~" + matchPosition + "~" + matchLength + "~";
+					String literal = lookaheadBuffer.substring(0, matchLength + 1);
+	
+					if (matchLength > 0 && encodedMatch.length() < literal.length()) {
+						// Write encoded match
+						char nextLiteral = (matchLength < lookaheadBuffer.length())
+								? lookaheadBuffer.charAt(matchLength)
+								: '\0';
+						fos.write((encodedMatch + nextLiteral).getBytes());
+					} else {
+						// Write literal
+						fos.write(literal.getBytes());
+					}
+					// Update the search buffer
+					// Check that matchLength + 1 doesn't exceed the length of the lookahead buffer
+				}
+				// eror cach
+			}
+		}
+	}
+		
+
 		
 		//Huffmanis -----------------------------------------------------------
 
@@ -128,8 +191,6 @@ public class Main {
 
 			public static int compare(HuffmanNode x, HuffmanNode y) {
                 		return x.frequency - y.frequency; 
-            		}
-				}
             }
 
 		//jānolasa jaunais LZ77 fails 
@@ -205,7 +266,8 @@ private static String decompHuffman(String encodedData, Node root) {  //
         	int distance;
        		int garums;
         	char nextChar;
-    }
+    	}
+	
 	public static Triple fromString(String line) {
             String[] parts = line.split(",");
             return new Triple(
@@ -216,7 +278,7 @@ private static String decompHuffman(String encodedData, Node root) {  //
         }
 // Funkcija, kas lasa saspiestos faila datus un tos dekomprimē
     private static String decompress(List<Triple> compressed) {
-        StringBuilder decompressed = new StringBuilder();
+        StringBuilder decompressed = new StringBuilder();}
 	    // for  Ja distance un length ir 0, pievieno nextChar
 	    //if, else
 	    //Aprēķina sākuma indeksu
@@ -296,4 +358,5 @@ private static String decompHuffman(String encodedData, Node root) {  //
 		//izmantos huffmaņa koku un ies lejā nolasot kodiņu
 	}
 }
+
 
