@@ -160,6 +160,36 @@ public class Main {
 		//LZ77 the end ------------------------------------------------------------
 	}
 
+// Estere- Huffman method decomp
+
+private static String decompHuffman(String encodedData, Node root) {  //
+    StringBuilder decodedString = new StringBuilder(); //Izveido StringBuilder, lai saglabātu dekodētās rakstzīmes, šķērsojot koku.
+    Node current = root; // Sāk nolasīt no Huffman koka root
+
+
+    for (char bit : encodedData.toCharArray()) {
+        // Iziet cauri katram bitam (rakstzīme '0' vai '1') kodētajā datu virknē.
+        //toCharArray() pārvērš bināro virkni par rakstzīmju masīvu  preikš iterācijas.
+
+        current = (bit == '0') ? current.left : current.right;
+        //Pārbauda konkrēto bitu
+        //Ja bits ir '0', pāriet uz konkŗetā mezgla kreiso atvasinājumu (current.left).
+        //Ja bits ir '1', pāriet uz konkrētā mezgla labo atvasinājumu (current.right).
+
+        //Ja sasniedz leaf node (ir atšifrēts), iegūstam attiecīgo rakstzīmi.
+        if (current.isLeaf()) {
+            decodedString.append(current.character); //Šeit to iegūto rakstzīmi pievieno rezultātam
+            current = root; //Pēc katras reizes "koks" jāiestata no sākuma(no root)
+        }
+    }
+
+    return decodedString.toString(); // Atgriež pilnībā dekodēto virkni
+}
+
+// Esteres koda daļas beigas
+
+
+
 	public static void decomp(String sourceFile, String resultFile) {
 		// Indentācija guys :,((
 
