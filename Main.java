@@ -251,50 +251,70 @@ private static String decompHuffman(String encodedData, Node root) {  //
 
 
 
-	public static void decomp(String sourceFile, String resultFile) {
-		// Indentācija guys :,((
-
-		
+public static void decomp(String compressedFilePath) {
 		//LZ77(Liāna)---------------------------------------------------------------
-		//(Man aptuveni ir ideja kā tas viss varētu strādāt bet vēl viss ir procesā,
-		//sorry ka neko gnj nevar saprast manos komentāros.)
-		// Lasa saspiestu failu
-		// Izveido atjaunoto (dekompresēto) failu
-		// Izmanto Triple objektu sarakstu
-		// Triple klase (distance, garums, nextChar)
-    	static class Triple {
-        	int distance;
-       		int garums;
-        	char nextChar;
-    	}
-	
-	public static Triple fromString(String line) {
-            String[] parts = line.split(",");
-            return new Triple(
-                Integer.parseInt(parts[0]), 
-                Integer.parseInt(parts[1]), 
-                parts[2].charAt(0)
-            );
-        }
-// Funkcija, kas lasa saspiestos faila datus un tos dekomprimē
-    private static String decompress(List<Triple> compressed) {
-        StringBuilder decompressed = new StringBuilder();}
-	    // for  Ja distance un length ir 0, pievieno nextChar
-	    //if, else
-	    //Aprēķina sākuma indeksu
-	    // Pievieno atkārtotus simbolus ar for
+	File compressedFile = new File(compressedFilePath);
 
-	    // LZ77 dekompresijas galvenā funkcija
-	    public static void decompressFile(String inputFilePath, String outputFilePath) {
-        try {
-            // Lasa saspiesto failu
-           
+    // Pārbauda, vai saspiestais fails eksistē un ir fails
+    if (!compressedFile.exists() || !compressedFile.isFile()) {
+        System.out.println("Saspiestais fails nav atrasts: " + compressedFilePath);
+        return;
+    }
+
+    // Izveido ceļu dekompresētajam failam, aizstājot paplašinājumu
+    String decompressedFilePath = compressedFilePath.replace(".lz77", ".decompressed");
+    StringBuilder decompressedData = new StringBuilder(); // Glabās dekompresēto saturu
+
+    try (FileInputStream fis = new FileInputStream(compressedFile);
+         FileOutputStream fos = new FileOutputStream(decompressedFilePath)) {
+
+        System.out.println("Atspiež failu: " + compressedFilePath);
+
+        int nextChar;
+        while ((nextChar = fis.read()) != -1) { // Lasa saspiestā faila saturu simbolu pa simbolam
+            char c = (char) nextChar;
+
+            if (c == '~') { // Pārbauda, vai simbols norāda uz saspiešanas datu sākumu
+                StringBuilder matchData = new StringBuilder();
+                // Lasa pozīcijas un garuma datus līdz nākamajam "~"
+                while ((nextChar = fis.read()) != -1 && (char) nextChar != '~') {
+                    matchData.append((char) nextChar);
+                }
+
+                // Nosaka pozīciju un garumu, sadalot virkni
+                String[] matchParts = matchData.toString().split("~");
+                if (matchParts.length >= 2) { // Pārbauda, vai dati ir pareizi formatēti
+                    int position = Integer.parseInt(matchParts[0]); // Match sākuma pozīcija
+                    int length = Integer.parseInt(matchParts[1]);   // Match garums
+
+                    // Nokopē datus no dekompresētajiem datiem, sākot ar norādīto pozīciju
+                    int start = decompressedData.length() - position;
+                    for (int i = 0; i < length; i++) {
+                        decompressedData.append(decompressedData.charAt(start + i));
+                    }
+                }
+
+                // Pievieno nākamo burtu (literālu), ja tas ir pieejams
+                nextChar = fis.read();
+                if (nextChar != -1) {
+                    decompressedData.append((char) nextChar);
+                }
+            } else { // Ja simbols nav "~", tas ir literāls
+                decompressedData.append(c);
             }
-	catch (IOException e) {
+        }
+
+        // Pieraksta dekompresēto saturu uz failu
+        fos.write(decompressedData.toString().getBytes());
+        System.out.println("Fails atspiests: " + decompressedFilePath);
+
+    } catch (IOException e) {
+        // Apstrādā kļūdas, ja rodas problēmas ar faila apstrādi
+        System.err.println("Kļūda faila atspiešanā: " + e.getMessage());
+    }
 		
-	    }
-		// Dekomprimē datus ar for un if
-	}
+}
+// Liāna koda daļas beigas
 		
 	
 	public static void size(String sourceFile) {
