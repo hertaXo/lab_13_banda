@@ -194,14 +194,58 @@ public class Main {
             }
 
 		//jānolasa jaunais LZ77 fails 
+		Map<Character, Integer> freqMap = new HashMap<>();
+        	StringBuilder text = new StringBuilder();
+
+        	try (BufferedReader reader = new BufferedReader(new FileReader(sourceFile))) {
+            		String line;
+            		while ((line = reader.readLine()) != null) {
+                		text.append(line).append("\n");
+            		}
+        	}
 		//for cikls lai izveidotu vārdnīcu ar simboliem un to biežumiem
-		
-		//izveidot ArrayList, kur ieliek vārdnīcas vērtības, sakārto tās
+		for (char c : text.toString().toCharArray()) {
+            		freqMap.put(c, freqMap.getOrDefault(c, 0) + 1);
+        	}
+
+
+		//prioritātes rinda - sakārto vērtības kokā 		
+		PriorityQueue<HuffmanNode> pq = new PriorityQueue<>(new Comparator<HuffmanNode>() {
+            		public int compare(HuffmanNode node1, HuffmanNode node2) {
+                		return HuffmanNode.compare(node1, node2); 
+            		}
+        	});
+
 		//izveidot un aizpildīt Huffman Node sarakstu
-		
+		for (Map.Entry<Character, Integer> entry : freqMap.entrySet()) {
+            		pq.add(new HuffmanNode(entry.getKey(), entry.getValue()));
+        	}
+		//šo un iepriekšējo funkciju centīšos uzrakstīt saprotamāk - viss procesā ------------------------------------------
+
 		//jāizveido pats koks ar while ciklu, pāri palikusī lielākā biežuma vērtība būs sakne
+		while (pq.size() > 1) {
+            		HuffmanNode left = pq.poll();
+            		HuffmanNode right = pq.poll();
+
+            		HuffmanNode merged = new HuffmanNode('\0', left.frequency + right.frequency);
+            		merged.left = left;
+            		merged.right = right;
+
+            		pq.add(merged);
+        	}
+		  HuffmanNode root = pq.poll();
+		
 		//jāizveido vārdnīca ar simbols : Huffmaņa vērtību, jāizsauc Huffman codes metode
+		Map<Character, String> huffmanCodes = new HashMap<>();
+        	generateHuffmanCodes(root, "", huffmanCodes);
 		//jāsaraksta tas viss failā - for cikliņš
+
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(resultFile))) {
+            		writer.write("Huffman Codes: \n");
+            		for (Map.Entry<Character, String> entry : huffmanCodes.entrySet()) {
+                		writer.write(entry.getKey() + ": " + entry.getValue() + "\n");
+            		}
+        	}
 
 		//Huffmanis beigas ----------------------------------------------------------
 		
@@ -374,8 +418,15 @@ public static void decomp(String compressedFilePath) {
 	}
 
 	//huffmaņa koda ģenerators katrai vērtībai
-	public static void HuffmanCodes(){
-		//izmantos huffmaņa koku un ies lejā nolasot kodiņu
+	public static void generateHuffmanCodes(HuffmanNode node, String code, Map<Character, String> huffmanCodes){
+		if (node == null) return;
+
+        	if (node.left == null && node.right == null) {
+            		huffmanCodes.put(node.character, code);
+        	}
+
+        	generateHuffmanCodes(node.left, code + "0", huffmanCodes);
+        	generateHuffmanCodes(node.right, code + "1", huffmanCodes);
 	}
 }
 
