@@ -67,108 +67,52 @@ public class Main {
 	public static void comp(String sourceFile, String resultFile) {
 		// LZ77---------------------------------------------------------------
 		//set max for buffer(herta)
-		private static final int SEARCH_BUFFER_SIZE = 4096; // Maximum size of the search buffer
-		private static final int LOOKAHEAD_BUFFER_SIZE = 15; // Maximum size of the lookahead buffer
-		// lasa failu(Elizabete)
 
-		public static void man(String[] args) {
-			Scanner sc = new Scanner(System.in); // Izveido Scanner objektu lietotāja ievades nolasīšanai
-			
-			System.out.print("Ievadiet faila ceļu (piemēram, test.html): "); // Lūdz ievadīt faila ceļu
-			String sourceFile = sc.nextLine(); // Nolasām faila ceļu no lietotāja
+		final int SEARCH_BUFFER_SIZE = 1024; // Maximum size of the search buffer 
+		StringBuilder searchBuffer = new StringBuilder(SEARCH_BUFFER_SIZE);
 	
-			checkIfFileExistsAndRead(sourceFile); // Izsauc metodi, kas pārbauda faila esamību un lasa tā saturu
-			sc.close(); // Aizver Scanner objektu pēc lietošanas
-		}
+			//reads file (Elizabete)
+		try (BufferedReader reader = new BufferedReader(new FileReader(sourceFile));
+			 PrintWriter writer = new PrintWriter(new FileWriter(resultFile))) {
 	
-		public static void checkIfFileExistsAndRead(String sourceFile) {
-			File file = new File(sourceFile); // Izveido File objektu ar ievadīto ceļu
-			if (file.exists() && file.isFile()) { // Pārbauda, vai fails eksistē un ir fails
-				System.out.println("Fails atrasts: " + sourceFile);
-				readFileContent(sourceFile); // Ja fails pastāv, nolasām tā saturu
-			} else {
-				System.out.println("Fails nav atrasts: " + sourceFile); // Funkcija ja fails neeksistē
-			}
-		}
+			System.out.println("Compressing file: " + sourceFile);
 	
-		// Metode faila satura nolasīšanai un izdrukāšanai
-		public static void readFileContent(String sourceFile) {
-			try (FileInputStream fis = new FileInputStream(sourceFile)) {
-				int ch;
-				StringBuilder content = new StringBuilder(); // Lai saglabātu faila saturu
-				while ((ch = fis.read()) != -1) { // Lasa failu pa vienam burtam
-					content.append((char) ch); // Pievieno katru nolasīto simbolu saturam
-				}
-				System.out.println("Faila saturs:");
-				System.out.println(content.toString()); // Izvada faila saturu
-			} catch (IOException e) {
-				System.err.println("Kļūda faila apstrādē: " + e.getMessage());
-			}
-		}
-
-		// Method to compress a file using LZ77 (herta)
-		public static void compressFile(String sourceFile) {
-			File file = new File(sourceFile);
+			int nextChar;
+			String currentMatch = "";
+			int matchIndex = 0;
+			//lz77 comp
+			while ((nextChar = reader.read()) != -1) {
+				String extendedMatch = currentMatch + (char) nextChar;
+				int tempIndex = searchBuffer.indexOf(extendedMatch);
 	
-			if (!file.exists() || !file.isFile()) {
-				System.out.println("Fails nav atrasts: " + sourceFile);
-				return;
-			}
-	
-			String compressedFilePath = sourceFile + ".lz77";
-	
-			try (FileInputStream fis = new FileInputStream(sourceFile);
-					FileOutputStream fos = new FileOutputStream(compressedFilePath)) {
-	
-				System.out.println("Saspiest failu: " + sourceFile);
-				StringBuilder searchBuffer = new StringBuilder();
-	
-				int nextChar;
-				while ((nextChar = fis.read()) != -1) {
-					// Initialize lookahead buffer
-					StringBuilder lookaheadBuffer = new StringBuilder();
-					lookaheadBuffer.append((char) nextChar);
-	
-					int matchPosition = -1;
-					int matchLength = 0;
-	
-					// Find the longest match in the search buffer
-					for (int length = 1; length <= LOOKAHEAD_BUFFER_SIZE && nextChar != -1; length++) {
-						String lookahead = lookaheadBuffer.toString();
-						int tempPosition = searchBuffer.indexOf(lookahead);
-	
-						if (tempPosition != -1) {
-							matchPosition = tempPosition;
-							matchLength = lookahead.length();
-						} else {
-							break; // No further match
-						}
-	
-						nextChar = fis.read();
-						if (nextChar != -1) {
-							lookaheadBuffer.append((char) nextChar);
-						}
-					}
-	
-					// Decide whether to encode as match or literal
-					String encodedMatch = "~" + matchPosition + "~" + matchLength + "~";
-					String literal = lookaheadBuffer.substring(0, matchLength + 1);
-	
-					if (matchLength > 0 && encodedMatch.length() < literal.length()) {
-						// Write encoded match
-						char nextLiteral = (matchLength < lookaheadBuffer.length())
-								? lookaheadBuffer.charAt(matchLength)
-								: '\0';
-						fos.write((encodedMatch + nextLiteral).getBytes());
+				if (tempIndex != -1) {
+					currentMatch = extendedMatch;
+					matchIndex = tempIndex;
+				} else {
+					if (currentMatch.isEmpty()) {
+						// Write literal character
+						writer.print((char) nextChar);
+						searchBuffer.append((char) nextChar);
 					} else {
-						// Write literal
-						fos.write(literal.getBytes());
+						// Write encoded match
+						writer.printf("~%d~%d~%c", matchIndex, currentMatch.length(), (char) nextChar);
+						searchBuffer.append(currentMatch).append((char) nextChar);
 					}
-					// Update the search buffer
-					// Check that matchLength + 1 doesn't exceed the length of the lookahead buffer
+					currentMatch = "";
+					// Trim the search buffer to maintain its size
+					if (searchBuffer.length() > SEARCH_BUFFER_SIZE) {
+						searchBuffer.delete(0, searchBuffer.length() - SEARCH_BUFFER_SIZE);
+					}
 				}
-				// eror cach
 			}
+	
+			// Handle remaining match
+			if (!currentMatch.isEmpty()) {
+				writer.printf("~%d~%d", matchIndex, currentMatch.length());
+			}
+	
+		} catch (IOException e) {
+			System.err.println("Error during compression: " + e.getMessage());
 		}
 	}
 		
