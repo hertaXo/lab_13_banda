@@ -211,30 +211,48 @@ public class Main {
 
 // Estere- Huffman method decomp
 
-private static String decompHuffman(String encodedData, Node root) {  //
-    StringBuilder decodedString = new StringBuilder(); //Izveido StringBuilder, lai saglabātu dekodētās rakstzīmes, šķērsojot koku.
-    Node current = root; // Sāk nolasīt no Huffman koka root
+private static void huffmanDecompress(String sourceFile, String resultFile) throws IOException {
+    try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(sourceFile));
+         BufferedWriter writer = new BufferedWriter(new FileWriter(resultFile))) {
+        //Metode atver saspiesto failu (sourceFile) lasīšanai, izmantojot ObjectInputStream.
+        //ObjectInputStream tiek izmantots, lai lasītu serializētos Java objektus (Huffman kodus un kodētos datus).
+        //BufferedWriter ieraksta atspiestos datus izvades failā (resultFile).
+
+        Map<Character, String> huffmanCodes = (Map<Character, String>) in.readObject();
+        String encodedData = (String) in.readObject();
+        //Huffman kodi (Map <Character, String>) ir deserializēti no faila.
+        //saista katru rakstzīmi ar tai atbilstošo bināro Huffman kodu.
+        //Tas tika saglabāts saspiešanas laikā.
+        //Kodētie dati (virkne) satur saspiestu bitu plūsmu.
+
+        HuffmanNode root = buildHuffmanTreeFromCodes(huffmanCodes);
+        //Huffman koks tiek izveidots, izmantojot metodi buildHuffmanTreeFromCodes un huffmanCodes
+        //Šis koks vadīs dekodēšanas procesu, kur kustības pa kreisi (0. bits) un pa labi (1. bits) noved pie Leaf mezgliem, kuros ir oriģinālās rakstzīmes
 
 
-    for (char bit : encodedData.toCharArray()) {
-        // Iziet cauri katram bitam (rakstzīme '0' vai '1') kodētajā datu virknē.
-        //toCharArray() pārvērš bināro virkni par rakstzīmju masīvu  preikš iterācijas.
+        HuffmanNode currentNode = root;
+        //currentNode sākas Huffman koka saknē
 
-        current = (bit == '0') ? current.left : current.right;
-        //Pārbauda konkrēto bitu
-        //Ja bits ir '0', pāriet uz konkŗetā mezgla kreiso atvasinājumu (current.left).
-        //Ja bits ir '1', pāriet uz konkrētā mezgla labo atvasinājumu (current.right).
+        for (char bit : encodedData.toCharArray()) {
+            currentNode = (bit == '0') ? currentNode.left : currentNode.right;
+            //Katrs bits (0 vai 1) no kodētās datu virknes tiek nolasīts.
+            //0 pārvieto rādītāju uz pašreizējā mezgla kreiso pusi; 1 pārvieto uz labo
 
-        //Ja sasniedz leaf node (ir atšifrēts), iegūstam attiecīgo rakstzīmi.
-        if (current.isLeaf()) {
-            decodedString.append(current.character); //Šeit to iegūto rakstzīmi pievieno rezultātam
-            current = root; //Pēc katras reizes "koks" jāiestata no sākuma(no root)
+            if (currentNode.left == null && currentNode.right == null) {
+                writer.write(currentNode.character);
+                //Ja currentNode ir lapas mezgls (kreisais un labais ir nulles), tas nozīmē, ka ir atšifrēta visa rakstzīme.
+                //Lapas mezglā saglabātā rakstzīme (currentNode.character) tiek ierakstīta izvades failā.
+
+                currentNode = root;
+                //CurrentNode  tiek atiestatīts uz sakni, lai sāktu nākamās rakstzīmes dekodēšanu
+            }
         }
+    } catch (ClassNotFoundException e) {
+        throw new IOException("Corrupted file during Huffman decompression.", e);
+        //Ja deserializētie objekti (huffmanCodes vai encodedData) ir nederīgi,
+        // ClassNotFoundException tiek uztverts un atkārtoti izmests kā IOException ar  kļūdas ziņojumu.
     }
-
-    return decodedString.toString(); // Atgriež pilnībā dekodēto virkni
 }
-
 // Esteres koda daļas beigas
 
 
