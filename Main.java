@@ -239,7 +239,7 @@ private static String decompHuffman(String encodedData, Node root) {  //
 
 
 
-public static void decomp(String compressedFilePath) {
+public static void decomp(String compressedFile, String resultFile) {
 //LZ77(Liāna)---------------------------------------------------------------
 	 try (BufferedReader reader = new BufferedReader(new FileReader(compressedFile));
          PrintWriter writer = new PrintWriter(new FileWriter(resultFile))) {
@@ -294,16 +294,16 @@ public static void decomp(String compressedFilePath) {
 		
 	
 	public static void size(String sourceFile) {
-		System.out.print("file name: ");
-   		String sourceFile = scanner.nextLine();
 		try {
-			FileInputStream f = new FileInputStream(sourceFile);
-			System.out.println("size: " + f.available()+ " bytes");
-			f.close();
-		}
-		catch (IOException ex) {
-			System.out.println("Error: " + ex.getMessage());
-		}
+            File file = new File(sourceFile); // Create a File object for the source file
+            if (!file.exists()) {
+                System.out.println("Error: File not found: " + sourceFile);
+                return;
+            }
+            System.out.println("Size: " + file.length() + " bytes");
+        } catch (Exception ex) {
+            System.out.println("Error: " + ex.getMessage());
+        }
 		
 	}
 	
