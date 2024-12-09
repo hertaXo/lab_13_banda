@@ -240,68 +240,56 @@ private static String decompHuffman(String encodedData, Node root) {  //
 
 
 public static void decomp(String compressedFilePath) {
-		//LZ77(Liāna)---------------------------------------------------------------
-	File compressedFile = new File(compressedFilePath);
+//LZ77(Liāna)---------------------------------------------------------------
+	 try (BufferedReader reader = new BufferedReader(new FileReader(compressedFile));
+         PrintWriter writer = new PrintWriter(new FileWriter(resultFile))) {
 
-    // Pārbauda, vai saspiestais fails eksistē un ir fails
-    if (!compressedFile.exists() || !compressedFile.isFile()) {
-        System.out.println("Saspiestais fails nav atrasts: " + compressedFilePath);
-        return;
-    }
-
-    // Izveido ceļu dekompresētajam failam, aizstājot paplašinājumu
-    String decompressedFilePath = compressedFilePath.replace(".lz77", ".decompressed");
-    StringBuilder decompressedData = new StringBuilder(); // Glabās dekompresēto saturu
-
-    try (FileInputStream fis = new FileInputStream(compressedFile);
-         FileOutputStream fos = new FileOutputStream(decompressedFilePath)) {
-
-        System.out.println("Atspiež failu: " + compressedFilePath);
+        System.out.println("Decompressing file: " + compressedFile);
+        StringBuilder decompressedData = new StringBuilder(); // Holds the decompressed content
 
         int nextChar;
-        while ((nextChar = fis.read()) != -1) { // Lasa saspiestā faila saturu simbolu pa simbolam
+        while ((nextChar = reader.read()) != -1) {
             char c = (char) nextChar;
 
-            if (c == '~') { // Pārbauda, vai simbols norāda uz saspiešanas datu sākumu
+            if (c == '~') { // Detected encoded match
                 StringBuilder matchData = new StringBuilder();
-                // Lasa pozīcijas un garuma datus līdz nākamajam "~"
-                while ((nextChar = fis.read()) != -1 && (char) nextChar != '~') {
+                while ((nextChar = reader.read()) != -1 && (char) nextChar != '~') {
                     matchData.append((char) nextChar);
                 }
 
-                // Nosaka pozīciju un garumu, sadalot virkni
-                String[] matchParts = matchData.toString().split("~");
-                if (matchParts.length >= 2) { // Pārbauda, vai dati ir pareizi formatēti
-                    int position = Integer.parseInt(matchParts[0]); // Match sākuma pozīcija
-                    int length = Integer.parseInt(matchParts[1]);   // Match garums
+                // Decode match position, length, and next character
+                String[] parts = matchData.toString().split("~");
+                if (parts.length >= 2) {
+                    int matchIndex = Integer.parseInt(parts[0]);
+                    int matchLength = Integer.parseInt(parts[1]);
+                    int start = decompressedData.length() - matchIndex;
 
-                    // Nokopē datus no dekompresētajiem datiem, sākot ar norādīto pozīciju
-                    int start = decompressedData.length() - position;
-                    for (int i = 0; i < length; i++) {
+                    // Copy the matched content from the decompressed data
+                    for (int i = 0; i < matchLength; i++) {
                         decompressedData.append(decompressedData.charAt(start + i));
                     }
                 }
 
-                // Pievieno nākamo burtu (literālu), ja tas ir pieejams
-                nextChar = fis.read();
+                // Read and append the next literal character
+                nextChar = reader.read();
                 if (nextChar != -1) {
                     decompressedData.append((char) nextChar);
                 }
-            } else { // Ja simbols nav "~", tas ir literāls
+            } else {
+                // Append literal character directly
                 decompressedData.append(c);
             }
         }
 
-        // Pieraksta dekompresēto saturu uz failu
-        fos.write(decompressedData.toString().getBytes());
-        System.out.println("Fails atspiests: " + decompressedFilePath);
+        // Write the decompressed content to the result file
+        writer.print(decompressedData);
+        System.out.println("Decompression completed: " + resultFile);
 
     } catch (IOException e) {
-        // Apstrādā kļūdas, ja rodas problēmas ar faila apstrādi
-        System.err.println("Kļūda faila atspiešanā: " + e.getMessage());
+        System.err.println("Error during decompression: " + e.getMessage());
     }
-		
 }
+	
 // Liāna koda daļas beigas
 		
 	
