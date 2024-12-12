@@ -235,20 +235,6 @@ public class Main {
 	    
         //        //Huffmanis beigas ----------------------------------------------------------
 
-
-        private void trimSearchBuffer() {
-            // Limit search buffer size to 4096 characters
-        }
-
-        public static void main() /*string arg*/  {
-            // if viss ok
-            // izprintē ka viss ok
-
-            // try, error
-        }//Anete: uhmmm mums jau ir main funkcija augšā tho??
-
-
-        //LZ77 the end ------------------------------------------------------------
     }
 
 // Estere- Huffman method decomp
