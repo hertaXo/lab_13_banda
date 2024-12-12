@@ -74,168 +74,159 @@ public class Main {
 
     public static void comp(String sourceFile, String resultFile) {
         // LZ77---------------------------------------------------------------
-        //set max for buffer(herta)
-
-        final int SEARCH_BUFFER_SIZE = 1024; // Maximum size of the search buffer
-        StringBuilder searchBuffer = new StringBuilder(SEARCH_BUFFER_SIZE);
-
-        //reads file (Elizabete)
-        try (BufferedReader reader = new BufferedReader(new FileReader(sourceFile));
-             PrintWriter writer = new PrintWriter(new FileWriter(resultFile))) {
-
-            System.out.println("Compressing file: " + sourceFile);
-
-            int nextChar;
-            String currentMatch = "";
-            int matchIndex = 0;
-            //lz77 comp
-            while ((nextChar = reader.read()) != -1) {
-                String extendedMatch = currentMatch + (char) nextChar;
-                int tempIndex = searchBuffer.indexOf(extendedMatch);
-
-                if (tempIndex != -1) {
-                    currentMatch = extendedMatch;
-                    matchIndex = tempIndex;
-                } else {
-                    if (currentMatch.isEmpty()) {
-                        // Write literal character
-                        writer.print((char) nextChar);
-                        searchBuffer.append((char) nextChar);
-                    } else {
-                        // Write encoded match
-                        writer.printf("~%d~%d~%c", matchIndex, currentMatch.length(), (char) nextChar);
-                        searchBuffer.append(currentMatch).append((char) nextChar);
-                    }
-                    currentMatch = "";
-                    // Trim the search buffer to maintain its size
-                    if (searchBuffer.length() > SEARCH_BUFFER_SIZE) {
-                        searchBuffer.delete(0, searchBuffer.length() - SEARCH_BUFFER_SIZE);
+        static class LZ77 {
+            private static final int SEARCH_BUFFER_SIZE = 1024;
+    
+            public static void compress(String sourceFile, String resultFile) throws IOException {
+                try (BufferedReader reader = new BufferedReader(new FileReader(sourceFile));
+                     BufferedWriter writer = new BufferedWriter(new FileWriter(resultFile))) {
+    
+                    StringBuilder searchBuffer = new StringBuilder(SEARCH_BUFFER_SIZE);
+                    int nextChar;
+                    String currentMatch = "";
+                    int matchIndex = 0;
+    
+                    while ((nextChar = reader.read()) != -1) {
+                        String extendedMatch = currentMatch + (char) nextChar;
+                        int tempIndex = searchBuffer.indexOf(extendedMatch);
+    
+                        if (tempIndex != -1) {
+                            currentMatch = extendedMatch;
+                            matchIndex = tempIndex;
+                        } else {
+                            if (!currentMatch.isEmpty()) {
+                                writer.write("~" + matchIndex + "~" + currentMatch.length() + "~" + (char) nextChar);
+                                searchBuffer.append(currentMatch).append((char) nextChar);
+                            } else {
+                                writer.write((char) nextChar);
+                                searchBuffer.append((char) nextChar);
+                            }
+    
+                            if (searchBuffer.length() > SEARCH_BUFFER_SIZE) {
+                                searchBuffer.delete(0, searchBuffer.length() - SEARCH_BUFFER_SIZE);
+                            }
+    
+                            currentMatch = "";
+                        }
                     }
                 }
             }
+                
+    
 
-            // Handle remaining match
-            if (!currentMatch.isEmpty()) {
-                writer.printf("~%d~%d", matchIndex, currentMatch.length());
+
+
+        //Huffmanis -----------------------------------------------------------
+
+        class HuffmanNode {
+            char character;
+            int frequency;
+            HuffmanNode left;
+            HuffmanNode right;
+
+            public HuffmanNode(char character, int frequency) throws IOException {
+                this.character = character;
+                this.frequency = frequency;
+                this.left = null;
+                this.right = null;
             }
 
-        } catch (IOException e) {
-            System.err.println("Error during compression: " + e.getMessage());
-        }
-    }
+            public static int compare(HuffmanNode x, HuffmanNode y) {
+                return x.frequency - y.frequency;
+            }
 
+            //jānolasa jaunais LZ77 fails
+            public Map<Character, Integer> calculateFrequencies(String sourceFile) throws IOException {
+                Map<Character, Integer> freqMap = new HashMap<>();
+                StringBuilder text = new StringBuilder();
 
-
-    //Huffmanis -----------------------------------------------------------
-
-    class HuffmanNode {
-        char character;
-        int frequency;
-        HuffmanNode left;
-        HuffmanNode right;
-
-        public HuffmanNode(char character, int frequency) throws IOException {
-            this.character = character;
-            this.frequency = frequency;
-            this.left = null;
-            this.right = null;
-        }
-
-        public static int compare(HuffmanNode x, HuffmanNode y) {
-            return x.frequency - y.frequency;
-        }
-
-        //jānolasa jaunais LZ77 fails
-        public Map<Character, Integer> calculateFrequencies(String sourceFile) throws IOException {
-            Map<Character, Integer> freqMap = new HashMap<>();
-            StringBuilder text = new StringBuilder();
-
-            try (BufferedReader reader = new BufferedReader(new FileReader(sourceFile))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    text.append(line).append("\n");
+                try (BufferedReader reader = new BufferedReader(new FileReader(sourceFile))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        text.append(line).append("\n");
+                    }
                 }
+
+                // Biežuma vārdnīca
+                for (char c : text.toString().toCharArray()) {
+                    freqMap.put(c, freqMap.getOrDefault(c, 0) + 1);
+                }
+
+                return freqMap;
             }
 
-            // Biežuma vārdnīca
-            for (char c : text.toString().toCharArray()) {
-                freqMap.put(c, freqMap.getOrDefault(c, 0) + 1);
-            }
-
-            return freqMap;
-        }
-
-        //prioritātes rinda - sakārto vērtības kokā
-        PriorityQueue<HuffmanNode> pq = new PriorityQueue<>(new Comparator<HuffmanNode>() {
-            public int compare(HuffmanNode node1, HuffmanNode node2) {
-                return HuffmanNode.compare(node1, node2);
-            }
-        });
-
-        //izveido un aizpilda Huffman Node sarakstu
-        public PriorityQueue<HuffmanNode> createPriorityQueue(Map<Character, Integer> freqMap) throws IOException {
+            //prioritātes rinda - sakārto vērtības kokā
             PriorityQueue<HuffmanNode> pq = new PriorityQueue<>(new Comparator<HuffmanNode>() {
                 public int compare(HuffmanNode node1, HuffmanNode node2) {
                     return HuffmanNode.compare(node1, node2);
                 }
             });
 
-            for (Map.Entry<Character, Integer> entry : freqMap.entrySet()) {
-                pq.add(new HuffmanNode(entry.getKey(), entry.getValue()));
-            }
+            //izveido un aizpilda Huffman Node sarakstu
+            public PriorityQueue<HuffmanNode> createPriorityQueue(Map<Character, Integer> freqMap) throws IOException {
+                PriorityQueue<HuffmanNode> pq = new PriorityQueue<>(new Comparator<HuffmanNode>() {
+                    public int compare(HuffmanNode node1, HuffmanNode node2) {
+                        return HuffmanNode.compare(node1, node2);
+                    }
+                });
 
-            return pq;
-        }
-
-        //izveido pašu koku ar while ciklu, pāri palikusī lielākā biežuma vērtība būs sakne
-        public HuffmanNode buildHuffmanTree(PriorityQueue<HuffmanNode> pq) throws IOException {
-            while (pq.size() > 1) {
-                HuffmanNode left = pq.poll();
-                HuffmanNode right = pq.poll();
-
-                HuffmanNode merged = new HuffmanNode('\0', left.frequency + right.frequency);
-                merged.left = left;
-                merged.right = right;
-
-                pq.add(merged);
-            }
-            return pq.poll(); 
-        }
-        HuffmanNode root = pq.poll();
-
-        //jāizveido vārdnīca ar simbols : Huffmaņa vērtību, jāizsauc Huffman codes metode
-        public Map<Character, String> createHuffmanCodes(HuffmanNode root) {
-            Map<Character, String> huffmanCodes = new HashMap<>();
-            generateHuffmanCodes(root, "", huffmanCodes);
-            return huffmanCodes;
-        }
-	    
-        //saraksta tas viss failā - for cikliņš
-        public void writeHuffmanCodesToFile(Map<Character, String> huffmanCodes, String resultFile) {
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(resultFile))) {
-                writer.write("Huffman Codes: \n");
-                for (Map.Entry<Character, String> entry : huffmanCodes.entrySet()) {
-                    writer.write(entry.getKey() + ": " + entry.getValue() + "\n");
+                for (Map.Entry<Character, Integer> entry : freqMap.entrySet()) {
+                    pq.add(new HuffmanNode(entry.getKey(), entry.getValue()));
                 }
-            } catch (IOException e) {
-                e.printStackTrace(); 
-            }
-        }
 
-        public static void generateHuffmanCodes(HuffmanNode node, String code, Map<Character, String> huffmanCodes){
-            if (node == null) return;
-
-            if (node.left == null && node.right == null) {
-                huffmanCodes.put(node.character, code);
+                return pq;
             }
 
-            generateHuffmanCodes(node.left, code + "0", huffmanCodes);
-            generateHuffmanCodes(node.right, code + "1", huffmanCodes);
-        }
-	    
-        //        //Huffmanis beigas ----------------------------------------------------------
+            //izveido pašu koku ar while ciklu, pāri palikusī lielākā biežuma vērtība būs sakne
+            public HuffmanNode buildHuffmanTree(PriorityQueue<HuffmanNode> pq) throws IOException {
+                while (pq.size() > 1) {
+                    HuffmanNode left = pq.poll();
+                    HuffmanNode right = pq.poll();
 
+                    HuffmanNode merged = new HuffmanNode('\0', left.frequency + right.frequency);
+                    merged.left = left;
+                    merged.right = right;
+
+                    pq.add(merged);
+                }
+                return pq.poll(); 
+            }
+            HuffmanNode root = pq.poll();
+
+            //jāizveido vārdnīca ar simbols : Huffmaņa vērtību, jāizsauc Huffman codes metode
+            public Map<Character, String> createHuffmanCodes(HuffmanNode root) {
+                Map<Character, String> huffmanCodes = new HashMap<>();
+                generateHuffmanCodes(root, "", huffmanCodes);
+                return huffmanCodes;
+            }
+            
+            //saraksta tas viss failā - for cikliņš
+            public void writeHuffmanCodesToFile(Map<Character, String> huffmanCodes, String resultFile) {
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(resultFile))) {
+                    writer.write("Huffman Codes: \n");
+                    for (Map.Entry<Character, String> entry : huffmanCodes.entrySet()) {
+                        writer.write(entry.getKey() + ": " + entry.getValue() + "\n");
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace(); 
+                }
+            }
+
+            public static void generateHuffmanCodes(HuffmanNode node, String code, Map<Character, String> huffmanCodes){
+                if (node == null) return;
+
+                if (node.left == null && node.right == null) {
+                    huffmanCodes.put(node.character, code);
+                }
+
+                generateHuffmanCodes(node.left, code + "0", huffmanCodes);
+                generateHuffmanCodes(node.right, code + "1", huffmanCodes);
+                }
+            }   
+            //Huffmanis beigas ----------------------------------------------------------
+        }
     }
+	    
 
 // Estere- Huffman method decomp
 
