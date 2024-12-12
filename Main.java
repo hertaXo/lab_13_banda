@@ -156,7 +156,7 @@ public class Main {
             }
 
             //prioritātes rinda - sakārto vērtības kokā
-            PriorityQueue<HuffmanNode> pq = new PriorityQueue<>(new Comparator<HuffmanNode>() {
+            public PriorityQueue<HuffmanNode> pq = new PriorityQueue<>(new Comparator<HuffmanNode>() {
                 public int compare(HuffmanNode node1, HuffmanNode node2) {
                     return HuffmanNode.compare(node1, node2);
                 }
